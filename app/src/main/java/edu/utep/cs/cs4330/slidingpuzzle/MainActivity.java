@@ -3,6 +3,8 @@ package edu.utep.cs.cs4330.slidingpuzzle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -36,35 +38,19 @@ public class MainActivity extends AppCompatActivity {
 
         Tile[] tiles = puzzle.getTiles();
 
-        /**
-        tiles[0].setId(getResources().getIdentifier("d00","drawable", getPackageName()));
-        tiles[1].setId(getResources().getIdentifier("d01","drawable", getPackageName()));
-        tiles[2].setId(getResources().getIdentifier("d02","drawable", getPackageName()));
-        tiles[3].setId(getResources().getIdentifier("d10","drawable", getPackageName()));
-        tiles[4].setId(getResources().getIdentifier("d11","drawable", getPackageName()));
-        tiles[5].setId(getResources().getIdentifier("d12","drawable", getPackageName()));
-        tiles[6].setId(getResources().getIdentifier("d20","drawable", getPackageName()));
-        tiles[7].setId(getResources().getIdentifier("d21","drawable", getPackageName()));
-        tiles[8].setId(getResources().getIdentifier("d22","drawable", getPackageName()));
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dogg);
 
+        int size = (bitmap.getWidth() < bitmap.getHeight()) ? bitmap.getWidth() : bitmap.getHeight();
+
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap,size,size,true);
+        Bitmap[] bitmaps = splitBitmap(scaled,3,3);
+
+        for(int i = 0; i < 9; i++){
+            tiles[i].bitmap = bitmaps[i];
+        }
+
+        tiles[8].bitmap.eraseColor(Color.WHITE);
         tiles[8].setEmpty(true);
-         **/
-
-        Drawable[] d = images();
-
-        tiles[0].drawable = d[0];
-        tiles[1].drawable = d[1];
-        tiles[2].drawable = d[2];
-        tiles[3].drawable = d[3];
-        tiles[4].drawable = d[4];
-        tiles[5].drawable = d[5];
-        tiles[6].drawable = d[6];
-        tiles[7].drawable = d[7];
-        tiles[8].drawable = d[8];
-
-        tiles[8].setEmpty(true);
-
-
 
 
         final TileAdapter tileAdapter = new TileAdapter(this, puzzle.getTiles());
@@ -91,51 +77,32 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this,"You Win!",Toast.LENGTH_SHORT).show();
     }
 
-    private Drawable[] images(){
-        Drawable[] images = new Drawable[9];
+    private Bitmap[] splitBitmap(Bitmap bitmap, int xCount, int yCount) {
 
-        Drawable original = squareImage();
+        Bitmap[][] bitmaps = new Bitmap[xCount][yCount];
+        int width, height;
 
-        Bitmap bitmap = ((BitmapDrawable)original).getBitmap();
+        width = bitmap.getWidth() / xCount;
+        height = bitmap.getHeight() / yCount;
 
-        int chunkLenght = 10;
-        int w = chunkLenght;
-        int h = chunkLenght;
+        for(int x = 0; x < xCount; ++x) {
+            for(int y = 0; y < yCount; ++y) {
+
+                bitmaps[x][y] = Bitmap.createBitmap(bitmap, x * width, y * height, width, height);
+            }
+        }
+
+        Bitmap[] pieces = new Bitmap[xCount*yCount];
         int index = 0;
 
-
-        for(int x=0; x<3; x++){
-            for(int y=0; y<3; y++){
-                Bitmap b = Bitmap.createBitmap(bitmap,x,y,w,h);
-                images[index] = new BitmapDrawable(getResources(),b);
+        for(Bitmap[] row: bitmaps){
+            for(Bitmap col: row){
+                pieces[index] = col;
                 index++;
-                h += h;
             }
-            w += w;
         }
 
-        return images;
-    }
-
-    private Drawable squareImage(){
-        Drawable original = getDrawable(R.drawable.dogg);
-
-        Rect bounds = original.copyBounds();
-        int size;
-
-        if(bounds.width() < bounds.height()){
-            size = bounds.width();
-        }else{
-            size = bounds.height();
-        }
-
-        size = 1000;
-
-        Bitmap bitmap = ((BitmapDrawable)original).getBitmap();
-        Drawable squared = new BitmapDrawable(getResources(),
-                Bitmap.createScaledBitmap(bitmap,size,size,true));
-
-        return squared;
+        return pieces;
     }
 
 

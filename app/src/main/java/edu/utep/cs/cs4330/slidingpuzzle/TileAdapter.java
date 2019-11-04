@@ -44,7 +44,7 @@ public class TileAdapter extends BaseAdapter {
         ImageView imageView = view.findViewById(R.id.image_view);
 
         //imageView.setBackgroundResource(tile.getId());
-        imageView.setImageDrawable(tile.drawable);
+        imageView.setImageBitmap(tile.bitmap);
 
         return view;
     }

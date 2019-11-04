@@ -1,5 +1,6 @@
 package edu.utep.cs.cs4330.slidingpuzzle;
 
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -23,7 +24,7 @@ public class Tile {
     private int position;
     private boolean isEmpty;
 
-    Drawable drawable;
+    Bitmap bitmap;
 
 
     public void setId(int id) {
