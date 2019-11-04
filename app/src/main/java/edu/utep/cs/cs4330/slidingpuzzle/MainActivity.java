@@ -2,6 +2,9 @@ package edu.utep.cs.cs4330.slidingpuzzle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,7 +16,8 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     private GridView gridView;
-    private Tile[] tiles = Tile.generate(9);
+    private SlidingPuzzle puzzle;
+    private int size = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +29,14 @@ public class MainActivity extends AppCompatActivity {
         gridView.setVerticalScrollBarEnabled(false);
 
 
+        puzzle = new SlidingPuzzle(size);
+        puzzle.generate();
+
+        gridView.setNumColumns(size);
+
+        Tile[] tiles = puzzle.getTiles();
+
+        /**
         tiles[0].setId(getResources().getIdentifier("d00","drawable", getPackageName()));
         tiles[1].setId(getResources().getIdentifier("d01","drawable", getPackageName()));
         tiles[2].setId(getResources().getIdentifier("d02","drawable", getPackageName()));
@@ -35,82 +47,96 @@ public class MainActivity extends AppCompatActivity {
         tiles[7].setId(getResources().getIdentifier("d21","drawable", getPackageName()));
         tiles[8].setId(getResources().getIdentifier("d22","drawable", getPackageName()));
 
+        tiles[8].setEmpty(true);
+         **/
+
+        Drawable[] d = images();
+
+        tiles[0].drawable = d[0];
+        tiles[1].drawable = d[1];
+        tiles[2].drawable = d[2];
+        tiles[3].drawable = d[3];
+        tiles[4].drawable = d[4];
+        tiles[5].drawable = d[5];
+        tiles[6].drawable = d[6];
+        tiles[7].drawable = d[7];
+        tiles[8].drawable = d[8];
 
         tiles[8].setEmpty(true);
 
 
-        final TileAdapter tileAdapter = new TileAdapter(this, tiles);
 
-        shuffle();
 
+        final TileAdapter tileAdapter = new TileAdapter(this, puzzle.getTiles());
+
+        puzzle.shuffle();
         gridView.setAdapter(tileAdapter);
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Tile tile = tiles[i];
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-                //check left
-                if(inBounds(i-1) && tiles[i-1] != null && tiles[i-1].isEmpty()){
-                    Tile temp = tiles[i-1];
-                    tiles[i-1] = tile;
-                    tiles[i] = temp;
-                }
-                //check right
-                else if(inBounds(i+1) && tiles[i+1] != null && tiles[i+1].isEmpty()){
-                    Tile temp = tiles[i+1];
-                    tiles[i+1] = tile;
-                    tiles[i] = temp;
-                }
-                //check up
-                else if(inBounds(i-3) && tiles[i-3] != null && tiles[i-3].isEmpty()){
-                    Tile temp = tiles[i-3];
-                    tiles[i-3] = tile;
-                    tiles[i] = temp;
-                }
-                //check down
-                else if(inBounds(i+3) && tiles[i+3] != null && tiles[i+3].isEmpty()){
-                    Tile temp = tiles[i+3];
-                    tiles[i+3] = tile;
-                    tiles[i] = temp;
-                }
-
+                puzzle.move(position);
                 tileAdapter.notifyDataSetChanged();
 
-                if(isWin()){
-                    Log.d("STATE", "WIN CONDITION");
+                if(puzzle.isWin()){
+                    displayWin();
                 }
-
             }
         });
 
     }
 
-    private boolean inBounds(int position){
-        return (position >= 0) && (position < tiles.length);
+    private void displayWin(){
+        Toast.makeText(this,"You Win!",Toast.LENGTH_SHORT).show();
     }
 
+    private Drawable[] images(){
+        Drawable[] images = new Drawable[9];
 
-    private void shuffle(){
-        for(int i = tiles.length - 1; i > 0; i--){
-            double j = Math.floor(Math.random() * (i+1));
+        Drawable original = squareImage();
 
-            Tile temp = tiles[i];
-            tiles[i] = tiles[(int)j];
-            tiles[(int)j] = temp;
-        }
-    }
+        Bitmap bitmap = ((BitmapDrawable)original).getBitmap();
 
-    private boolean isWin(){
-        for(int i = 0; i < tiles.length; i++){
-            Log.d("isWin","getPosition = " + tiles[i].getPosition() + " i = " + i);
-            if(tiles[i].getPosition() != i) {
-                Log.d("isWin","getPosition = " + tiles[i].getPosition() + " i = " + i);
-                return false;
+        int chunkLenght = 10;
+        int w = chunkLenght;
+        int h = chunkLenght;
+        int index = 0;
+
+
+        for(int x=0; x<3; x++){
+            for(int y=0; y<3; y++){
+                Bitmap b = Bitmap.createBitmap(bitmap,x,y,w,h);
+                images[index] = new BitmapDrawable(getResources(),b);
+                index++;
+                h += h;
             }
+            w += w;
         }
 
-        return true;
+        return images;
     }
+
+    private Drawable squareImage(){
+        Drawable original = getDrawable(R.drawable.dogg);
+
+        Rect bounds = original.copyBounds();
+        int size;
+
+        if(bounds.width() < bounds.height()){
+            size = bounds.width();
+        }else{
+            size = bounds.height();
+        }
+
+        size = 1000;
+
+        Bitmap bitmap = ((BitmapDrawable)original).getBitmap();
+        Drawable squared = new BitmapDrawable(getResources(),
+                Bitmap.createScaledBitmap(bitmap,size,size,true));
+
+        return squared;
+    }
+
 
 }

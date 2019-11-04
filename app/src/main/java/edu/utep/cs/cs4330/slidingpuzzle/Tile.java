@@ -23,6 +23,8 @@ public class Tile {
     private int position;
     private boolean isEmpty;
 
+    Drawable drawable;
+
 
     public void setId(int id) {
         this.id = id;
@@ -63,15 +65,6 @@ public class Tile {
         return Integer.toString(getPosition());
     }
 
-    /** Generate tiles for testing **/
-    public static Tile[] generate(int amount){
-        Tile[] tiles = new Tile[amount];
-
-        for(int i = 0; i < amount; i++){
-            tiles[i] = new Tile(i);
-        }
-        return tiles;
-    }
 
 
 
