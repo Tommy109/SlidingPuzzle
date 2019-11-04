@@ -10,12 +10,39 @@
         android:id="@+id/grid_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:fastScrollEnabled="false"
         android:horizontalSpacing="0dp"
-        android:verticalSpacing="0dp"
-        android:fastScrollEnabled="false" />
+        android:padding="10dp"
+        android:verticalSpacing="0dp" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom|center"
+        android:paddingTop="50dp"
+        android:gravity="bottom|center">
 
+        <Button
+            android:id="@+id/photo_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camera"/>
+
+        <Button
+            android:id="@+id/button_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Game" />
+
+        <EditText
+            android:id="@+id/edit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="input size"
+            android:inputType="number" />
+
+    </LinearLayout>
 
 
 </LinearLayout>

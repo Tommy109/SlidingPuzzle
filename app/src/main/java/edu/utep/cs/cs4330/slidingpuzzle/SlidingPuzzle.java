@@ -1,6 +1,10 @@
+/**
+ * Author: Tomas Chagoya
+ */
+
+
 package edu.utep.cs.cs4330.slidingpuzzle;
 
-import android.media.Image;
 
 public class SlidingPuzzle {
 
@@ -21,8 +25,13 @@ public class SlidingPuzzle {
         tiles = new Tile[size*size];
     }
 
+    /** Needs fix, when switching the tile views, the position for the tile model stays the same;
+     * gotta update that correctly**/
     public boolean isWin(){
+        //Log.d("isWin", "NEW CALL");
+
         for(int i = 0; i < tiles.length; i++){
+            //Log.d("isWin:", "TilePos["+tiles[i].getPosition()+"]" + "-> Index["+i+"]");
             if(tiles[i].getPosition() != i)
                 return false;
         }
@@ -45,6 +54,7 @@ public class SlidingPuzzle {
 
     public void move(int i){
         Tile temp;
+        int tempPos;
 
         if(isLeftEmpty(i)){
             temp = tiles[i-1];
@@ -55,6 +65,7 @@ public class SlidingPuzzle {
             temp = tiles[i+1];
             tiles[i+1] = tiles[i];
             tiles[i] = temp;
+
         }
         else if(isDownEmpty(i)){
             temp = tiles[i+size];
@@ -96,6 +107,7 @@ public class SlidingPuzzle {
         return false;
     }
 
+    /** Fix right and left **/
     private boolean isRightEmpty(int position){
         int right = position+1;
 
