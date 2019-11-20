@@ -1,19 +1,48 @@
+/**
+ * Author: Tomas Chagoya
+ */
+
+
 package edu.utep.cs.cs4330.slidingpuzzle;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.DisplayMetrics;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class MainActivity extends AppCompatActivity {
 
+    static final int REQUESET_TAKE_PHOTO = 1;
+
     private GridView gridView;
-    private Tile[] tiles = Tile.generate(9);
+    private SlidingPuzzle puzzle;
+    private int size = 3;
+    private Tile[] tiles;
+
+
+    private File photoFile;
+
+    private Button button;
+    private EditText editText;
+    private Button photoButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,94 +52,189 @@ public class MainActivity extends AppCompatActivity {
 
         gridView = findViewById(R.id.grid_view);
         gridView.setVerticalScrollBarEnabled(false);
+        button = findViewById(R.id.button_view);
+        editText = findViewById(R.id.edit_text);
+        photoButton = findViewById(R.id.photo_button);
 
+        photoButton.setOnClickListener(view -> {
+            dispatchTakePictureIntent();
 
-        tiles[0].setId(getResources().getIdentifier("d00","drawable", getPackageName()));
-        tiles[1].setId(getResources().getIdentifier("d01","drawable", getPackageName()));
-        tiles[2].setId(getResources().getIdentifier("d02","drawable", getPackageName()));
-        tiles[3].setId(getResources().getIdentifier("d10","drawable", getPackageName()));
-        tiles[4].setId(getResources().getIdentifier("d11","drawable", getPackageName()));
-        tiles[5].setId(getResources().getIdentifier("d12","drawable", getPackageName()));
-        tiles[6].setId(getResources().getIdentifier("d20","drawable", getPackageName()));
-        tiles[7].setId(getResources().getIdentifier("d21","drawable", getPackageName()));
-        tiles[8].setId(getResources().getIdentifier("d22","drawable", getPackageName()));
-
-
-        tiles[8].setEmpty(true);
-
-
-        final TileAdapter tileAdapter = new TileAdapter(this, tiles);
-
-        shuffle();
-
-        gridView.setAdapter(tileAdapter);
-
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Tile tile = tiles[i];
-
-                //check left
-                if(inBounds(i-1) && tiles[i-1] != null && tiles[i-1].isEmpty()){
-                    Tile temp = tiles[i-1];
-                    tiles[i-1] = tile;
-                    tiles[i] = temp;
-                }
-                //check right
-                else if(inBounds(i+1) && tiles[i+1] != null && tiles[i+1].isEmpty()){
-                    Tile temp = tiles[i+1];
-                    tiles[i+1] = tile;
-                    tiles[i] = temp;
-                }
-                //check up
-                else if(inBounds(i-3) && tiles[i-3] != null && tiles[i-3].isEmpty()){
-                    Tile temp = tiles[i-3];
-                    tiles[i-3] = tile;
-                    tiles[i] = temp;
-                }
-                //check down
-                else if(inBounds(i+3) && tiles[i+3] != null && tiles[i+3].isEmpty()){
-                    Tile temp = tiles[i+3];
-                    tiles[i+3] = tile;
-                    tiles[i] = temp;
-                }
-
-                tileAdapter.notifyDataSetChanged();
-
-                if(isWin()){
-                    Log.d("STATE", "WIN CONDITION");
-                }
-
-            }
         });
 
+        button.setOnClickListener(view ->{
+            newGame(null);
+            puzzle.shuffle();
+        });
+
+        setGame();
+
+        /** Get image **/
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.annie);
+        fixImage(bitmap);
+
     }
 
-    private boolean inBounds(int position){
-        return (position >= 0) && (position < tiles.length);
+
+
+    public void setGame(){
+        puzzle = new SlidingPuzzle(size);
+        puzzle.generate();
+
+        gridView.setNumColumns(size);
+
+        tiles = puzzle.getTiles();
+
+
+        TileAdapter tileAdapter = new TileAdapter(this, puzzle.getTiles());
+
+        puzzle.shuffle();
+        gridView.setAdapter(tileAdapter);
+
+
+
+        gridView.setOnItemClickListener((adapterView,view,position,l) -> {
+
+                puzzle.move(position);
+                tileAdapter.notifyDataSetChanged();
+
+                if(puzzle.isWin()){
+                    displayWin();
+                }
+            });
+
     }
 
+    public void newGame(Bitmap bitmap){
 
-    private void shuffle(){
-        for(int i = tiles.length - 1; i > 0; i--){
-            double j = Math.floor(Math.random() * (i+1));
-
-            Tile temp = tiles[i];
-            tiles[i] = tiles[(int)j];
-            tiles[(int)j] = temp;
+        try {
+            size = Integer.parseInt(editText.getText().toString());
+        }catch(NumberFormatException e){
+            e.getStackTrace();
+            size = 3;
         }
+
+        if(size < 2){
+            size = 3;
+        }
+
+        setGame();
+
+        /** Get static image if it wasn't called by camera button**/
+        if(bitmap == null)
+            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.dogg);
+
+
+        fixImage(bitmap);
     }
 
-    private boolean isWin(){
-        for(int i = 0; i < tiles.length; i++){
-            Log.d("isWin","getPosition = " + tiles[i].getPosition() + " i = " + i);
-            if(tiles[i].getPosition() != i) {
-                Log.d("isWin","getPosition = " + tiles[i].getPosition() + " i = " + i);
-                return false;
+    private void displayWin(){
+        Toast.makeText(this,"You Win!",Toast.LENGTH_SHORT).show();
+    }
+
+    private Bitmap[] splitBitmap(Bitmap bitmap, int xCount, int yCount) {
+
+        Bitmap[][] bitmaps = new Bitmap[xCount][yCount];
+        int width, height;
+
+        width = bitmap.getWidth() / xCount;
+        height = bitmap.getHeight() / yCount;
+
+        for(int x = 0; x < xCount; ++x) {
+            for(int y = 0; y < yCount; ++y) {
+                bitmaps[x][y] = Bitmap.createBitmap(bitmap, x * width, y * height, width, height);
             }
         }
 
-        return true;
+        Bitmap[] pieces = new Bitmap[xCount*yCount];
+        int index = 0;
+
+        for(Bitmap[] row: bitmaps){
+            for(Bitmap col: row){
+                pieces[index] = col;
+                index++;
+            }
+        }
+
+        return pieces;
     }
+
+    private void fixImage(Bitmap bitmap){
+        /**
+         * Scaled image based on phone screen size
+         */
+        DisplayMetrics dm = this.getResources().getDisplayMetrics();
+        int screenWidth = dm.widthPixels ;
+
+        /** Scale image to fit phone screen **/
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap,screenWidth,screenWidth,false);
+
+        /** Split image into individual images and store **/
+        Bitmap[] bitmaps = splitBitmap(scaled,size,size);
+
+        /** Save each piece to each tile**/
+        for(int i = 0; i < this.size*this.size; i++){
+            tiles[i].setBitmap(bitmaps[i]);
+        }
+
+        /** Make the last tile always empty and blank **/
+        tiles[size*size-1].getBitmap().eraseColor(Color.WHITE);
+        tiles[size*size-1].setEmpty(true);
+
+        //Toast.makeText(this,"SW: " + dpWidth + "   SH: " + dpHeight, Toast.LENGTH_LONG).show();
+    }
+
+    private void dispatchTakePictureIntent(){
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        if(takePictureIntent.resolveActivity((getPackageManager())) != null){
+            photoFile = null;
+
+            try{
+                photoFile = createImageFile();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+
+            if(photoFile != null){
+                Uri photoURI = FileProvider.getUriForFile(
+                        this,"edu.utep.cs.cs4330.slidingpuzzle",
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUESET_TAKE_PHOTO);
+            }
+
+
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == REQUESET_TAKE_PHOTO){
+            if(resultCode == RESULT_OK){
+                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath(), bmOptions);
+
+                newGame(bitmap);
+            }
+        }
+    }
+
+    private File createImageFile() throws IOException{
+
+        String photoPath;
+        String timeSttamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeSttamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,
+                ".jgp",
+                storageDir
+        );
+
+        photoPath = image.getAbsolutePath();
+        return image;
+    }
+
 
 }

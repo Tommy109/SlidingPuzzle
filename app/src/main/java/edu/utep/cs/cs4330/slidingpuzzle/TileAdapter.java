@@ -1,3 +1,8 @@
+/**
+ * Author: Tomas Chagoya
+ */
+
+
 package edu.utep.cs.cs4330.slidingpuzzle;
 
 import android.content.Context;
@@ -43,7 +48,8 @@ public class TileAdapter extends BaseAdapter {
 
         ImageView imageView = view.findViewById(R.id.image_view);
 
-        imageView.setBackgroundResource(tile.getId());
+        //imageView.setBackgroundResource(tile.getId());
+        imageView.setImageBitmap(tile.getBitmap());
 
         return view;
     }

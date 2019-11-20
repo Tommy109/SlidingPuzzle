@@ -1,5 +1,11 @@
+/**
+ * Author: Tomas Chagoya
+ */
+
+
 package edu.utep.cs.cs4330.slidingpuzzle;
 
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -19,41 +25,32 @@ import java.util.Random;
  */
 public class Tile {
 
-    private int id;
     private int position;
     private boolean isEmpty;
+    private Bitmap bitmap;
 
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId(){
-        return id;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
+    public void setBitmap(Bitmap bitmap){ this.bitmap = bitmap; }
+    public Bitmap getBitmap(){return bitmap;}
 
     public void setEmpty(boolean empty) {
         isEmpty = empty;
     }
 
     public int getPosition() { return position; }
+    public void setPosition(int position) {this.position = position;}
 
     public boolean isEmpty(){
         return isEmpty;
     }
 
-    public Tile(int position, int id){
+    public Tile(int position, Bitmap bitmap) {
+        this.bitmap = bitmap;
         this.position = position;
-        this.id = id;
         this.isEmpty = false;
     }
 
     public Tile(int position){
-        this(position,-1);
+        this(position,null);
         isEmpty = false;
     }
 
@@ -63,15 +60,6 @@ public class Tile {
         return Integer.toString(getPosition());
     }
 
-    /** Generate tiles for testing **/
-    public static Tile[] generate(int amount){
-        Tile[] tiles = new Tile[amount];
-
-        for(int i = 0; i < amount; i++){
-            tiles[i] = new Tile(i);
-        }
-        return tiles;
-    }
 
 
 
